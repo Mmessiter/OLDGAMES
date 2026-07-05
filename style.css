@@ -57,3 +57,128 @@ canvas {
   letter-spacing: 2px;
   user-select: none;
 }
+
+/* ---------- touch controls (phones & tablets only) ---------- */
+
+body.touch-device {
+  -webkit-tap-highlight-color: transparent;
+  touch-action: none;
+  overscroll-behavior: none;
+  /* keep the game clear of the control pad at the bottom */
+  justify-content: flex-start;
+  padding-top: max(8px, env(safe-area-inset-top, 8px));
+}
+
+body.touch-device #hint { display: none; }
+
+#touchui {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 185px;
+  display: none;
+  z-index: 20;
+  user-select: none;
+  -webkit-user-select: none;
+  touch-action: none;
+  padding-bottom: env(safe-area-inset-bottom, 0);
+}
+
+#touchui.active { display: block; }
+
+.tu-util {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  display: flex;
+  justify-content: center;
+  gap: 14px;
+}
+
+.tu-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: "Courier New", monospace;
+  font-weight: bold;
+  color: #9ff;
+  background: rgba(30, 40, 70, 0.55);
+  border: 1px solid rgba(120, 200, 255, 0.45);
+  border-radius: 10px;
+  touch-action: none;
+}
+
+.tu-btn.on { background: rgba(80, 170, 255, 0.55); color: #fff; }
+
+.tu-mini {
+  min-width: 74px;
+  height: 30px;
+  font-size: 12px;
+  letter-spacing: 1px;
+}
+
+.tu-ok { color: #ffe14d; border-color: rgba(255, 225, 77, 0.5); }
+
+.tu-dpad {
+  position: absolute;
+  left: 16px;
+  bottom: 14px;
+  width: 138px;
+  height: 138px;
+  border-radius: 50%;
+  background: rgba(30, 40, 70, 0.35);
+  border: 1px solid rgba(120, 200, 255, 0.35);
+}
+
+.tu-arm {
+  position: absolute;
+  width: 40px;
+  height: 40px;
+  border-radius: 9px;
+  background: rgba(120, 200, 255, 0.30);
+}
+
+.tu-up    { left: 49px; top: 8px; }
+.tu-down  { left: 49px; bottom: 8px; }
+.tu-left  { left: 8px; top: 49px; }
+.tu-right { right: 8px; top: 49px; }
+
+.tu-dpad.mode-lr .tu-up, .tu-dpad.mode-lr .tu-down { display: none; }
+.tu-dpad.mode-ud .tu-left, .tu-dpad.mode-ud .tu-right { display: none; }
+
+.tu-dpad.dir-up .tu-up, .tu-dpad.dir-down .tu-down,
+.tu-dpad.dir-left .tu-left, .tu-dpad.dir-right .tu-right {
+  background: rgba(120, 220, 255, 0.85);
+}
+
+.tu-actions {
+  position: absolute;
+  right: 16px;
+  bottom: 14px;
+  display: flex;
+  align-items: flex-end;
+  gap: 16px;
+}
+
+.tu-round {
+  border-radius: 50%;
+  font-size: 13px;
+  letter-spacing: 1px;
+}
+
+.tu-a {
+  width: 84px;
+  height: 84px;
+  color: #7cfc6a;
+  border-color: rgba(124, 252, 106, 0.5);
+}
+
+.tu-b {
+  width: 68px;
+  height: 68px;
+  margin-bottom: 24px;
+  color: #ff8de1;
+  border-color: rgba(255, 141, 225, 0.5);
+}

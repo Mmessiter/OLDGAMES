@@ -43,7 +43,15 @@ browser — Safari, Chrome, etc.).
 > directly always works.
 
 Pick a game from the menu with the **arrow keys** and press **ENTER**
-(or press **1**–**4**). The menu shows the controls for each game.
+(or press **1**–**6**). The menu shows the controls for each game.
+
+### On a phone or tablet
+Just open the same link — touch controls appear automatically: a d-pad on
+the left (slide your thumb between directions) and action buttons on the
+right, plus MENU / PAUSE at the top of the pad. Tap a menu entry to play it.
+Chess is played entirely on the board: tap a piece, tap a square, drag to
+spin the room, pinch to zoom. For the full arcade feel use Share →
+**Add to Home Screen** — you get a proper '80s icon and no browser bars.
 
 ### Everywhere
 | Key | Action |

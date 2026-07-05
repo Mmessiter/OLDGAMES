@@ -327,6 +327,13 @@ class ChessGame {
     window.addEventListener('mousemove', this.onMove);
     window.addEventListener('mouseup', this.onUp);
     api.canvas.addEventListener('wheel', this.onWheel, { passive: false });
+    this.onTS = (ev) => this.touchStart(ev);
+    this.onTM = (ev) => this.touchMove(ev);
+    this.onTE = (ev) => this.touchEnd(ev);
+    api.canvas.addEventListener('touchstart', this.onTS, { passive: false });
+    api.canvas.addEventListener('touchmove', this.onTM, { passive: false });
+    api.canvas.addEventListener('touchend', this.onTE, { passive: false });
+    api.canvas.addEventListener('touchcancel', this.onTE, { passive: false });
     try { api.canvas.style.cursor = 'grab'; } catch (e) {}
 
     if (typeof location !== 'undefined' && location.search) {
@@ -1366,10 +1373,15 @@ class ChessGame {
     try { this.canvas.style.cursor = 'grab'; } catch (e) {}
     if (wasDrag) { this.impKey = null; return; }   // force a fresh lighting pass
     const p = this.logicalXY(ev);
+    this.clickAt(p.x, p.y);
+  }
+
+  // shared by mouse clicks and touch taps
+  clickAt(x, y) {
     if (this.state === 'pick') {
-      if (p.y > 396 && p.y < 566) {
-        if (p.x > 156 && p.x < 316) { this.beginGame(1); return; }
-        if (p.x > 356 && p.x < 516) { this.beginGame(-1); return; }
+      if (y > 396 && y < 566) {
+        if (x > 156 && x < 316) { this.beginGame(1); return; }
+        if (x > 356 && x < 516) { this.beginGame(-1); return; }
       }
       return;
     }
@@ -1377,11 +1389,68 @@ class ChessGame {
     let hit = -1;
     for (let i = 0; i < 64; i++) {
       const poly = this.tilePolys[i];
-      if (poly && this.pointInPoly(p.x, p.y, poly)) { hit = i; break; }
+      if (poly && this.pointInPoly(x, y, poly)) { hit = i; break; }
     }
     if (hit < 0) return;
     this.cursor = hit;
     this.press();
+  }
+
+  // ---- touch: one finger drags the view or taps a square; two fingers zoom ----
+
+  touchXY(t) {
+    const rect = this.canvas.getBoundingClientRect();
+    return {
+      x: (t.clientX - rect.left) * (this.canvas.width / rect.width) / this.RS,
+      y: (t.clientY - rect.top) * (this.canvas.height / rect.height) / this.RS,
+    };
+  }
+
+  touchStart(ev) {
+    ev.preventDefault();                    // stop WebKit synthesising mouse events too
+    Sfx.ac();
+    if (ev.touches.length === 1) {
+      const p = this.touchXY(ev.touches[0]);
+      this.tp = { x: p.x, y: p.y, sx: p.x, sy: p.y, moved: false, pinch: 0 };
+    } else if (ev.touches.length === 2 && this.tp) {
+      const a = this.touchXY(ev.touches[0]), b = this.touchXY(ev.touches[1]);
+      this.tp.pinch = Math.hypot(a.x - b.x, a.y - b.y);
+      this.tp.moved = true;
+    }
+  }
+
+  touchMove(ev) {
+    ev.preventDefault();
+    if (!this.tp) return;
+    if (ev.touches.length >= 2) {
+      const a = this.touchXY(ev.touches[0]), b = this.touchXY(ev.touches[1]);
+      const d = Math.hypot(a.x - b.x, a.y - b.y);
+      if (this.tp.pinch > 0) this.zoom((this.tp.pinch - d) * 0.03);
+      this.tp.pinch = d;
+      this.tp.moved = true;
+      return;
+    }
+    const p = this.touchXY(ev.touches[0]);
+    const dx = p.x - this.tp.x, dy = p.y - this.tp.y;
+    if (!this.tp.moved && Math.hypot(p.x - this.tp.sx, p.y - this.tp.sy) > 8) this.tp.moved = true;
+    if (this.tp.moved) {
+      this.cam.yaw -= dx * 0.008;
+      this.cam.targetYaw = this.cam.yaw;
+      this.cam.pitch = Math.max(0.10, Math.min(1.35, this.cam.pitch + dy * 0.006));
+    }
+    this.tp.x = p.x;
+    this.tp.y = p.y;
+  }
+
+  touchEnd(ev) {
+    ev.preventDefault();
+    if (!this.tp) return;
+    if (ev.touches.length > 0) { this.tp.pinch = 0; return; }   // a finger remains
+    const wasTap = !this.tp.moved;
+    const x = this.tp.sx, y = this.tp.sy;
+    this.tp = null;
+    if (wasTap) this.clickAt(x, y);
+    else this.impKey = null;               // drag over — refresh piece lighting
   }
 
   pointInPoly(x, y, poly) {
@@ -2422,6 +2491,10 @@ class ChessGame {
     window.removeEventListener('mousemove', this.onMove);
     window.removeEventListener('mouseup', this.onUp);
     this.canvas.removeEventListener('wheel', this.onWheel);
+    this.canvas.removeEventListener('touchstart', this.onTS);
+    this.canvas.removeEventListener('touchmove', this.onTM);
+    this.canvas.removeEventListener('touchend', this.onTE);
+    this.canvas.removeEventListener('touchcancel', this.onTE);
     this.canvas.style.imageRendering = '';
     try { this.canvas.style.cursor = ''; } catch (e) {}
     try {

@@ -13,6 +13,7 @@
              'SPACE          FIRE',
              'P              PAUSE'],
       blurb: 'Blast the fleet before it lands. Shoot the UFO for mystery points.',
+      touch: { dpad: 'lr', a: { code: 'Space', label: 'FIRE' } },
     },
     {
       title: 'PAC-MAN', color: '#ffe14d', hiKey: 'pacman',
@@ -20,6 +21,7 @@
       keys: ['ARROW KEYS     STEER PAC-MAN',
              'P              PAUSE'],
       blurb: 'Clear every dot. Power pellets turn the ghosts blue — then bite back.',
+      touch: { dpad: 'full' },
     },
     {
       title: 'TETRIS', color: '#00e6e6', hiKey: 'tetris',
@@ -30,6 +32,7 @@
              'SPACE          HARD DROP',
              'P              PAUSE'],
       blurb: 'Stack the falling pieces and clear lines. Every 10 lines it speeds up.',
+      touch: { dpad: 'full', a: { code: 'Space', label: 'DROP' }, b: { code: 'KeyZ', label: 'SPIN' } },
     },
     {
       title: 'CHESS', color: '#f2e2b8', hiKey: 'chess', hiLabel: 'WINS', pad: false,
@@ -40,6 +43,7 @@
              'N NEW GAME (SIDES ALTERNATE)',
              'V RESET VIEW · C OPPONENT'],
       blurb: 'Face Super-Viktor or Elasti-Vera — they stretch out and move the pieces by hand.',
+      touch: { ok: { code: 'KeyN', label: 'NEW' } },
     },
     {
       title: 'NEBULUS', color: '#7cfc6a', hiKey: 'nebulus',
@@ -50,6 +54,7 @@
              'Z or X         SHOOT',
              'P              PAUSE'],
       blurb: 'Climb from the sea to the sky — then go fishing between towers!',
+      touch: { dpad: 'full', a: { code: 'Space', label: 'JUMP' }, b: { code: 'KeyZ', label: 'SHOOT' } },
     },
     {
       title: 'MR EE', color: '#ff77aa', hiKey: 'mree',
@@ -59,6 +64,7 @@
              'PUSH APPLES ONTO THE CREEPS',
              'P              PAUSE'],
       blurb: 'Eat every cherry in the garden — or squash all the creeps. 8-in-a-row = bonus!',
+      touch: { dpad: 'full', a: { code: 'Space', label: 'BALL' } },
     },
   ];
 
@@ -81,8 +87,9 @@
 
   // Scale the canvas (preserving aspect) to fill most of the window.
   function fitCanvas() {
+    const touchPad = (typeof ArcadeTouch !== 'undefined' && ArcadeTouch.active) ? 190 : 0;
     const aw = window.innerWidth * 0.97;
-    const ah = window.innerHeight * 0.92;
+    const ah = (window.innerHeight - touchPad) * (touchPad ? 0.99 : 0.92);
     const r = canvas.width / canvas.height;
     let h = ah, w = ah * r;
     if (w > aw) { w = aw; h = aw / r; }
@@ -91,12 +98,15 @@
   }
   window.addEventListener('resize', fitCanvas);
 
+  const MENU_TOUCH = { dpad: 'ud', a: { code: 'Enter', label: 'PLAY' } };
+
   function showMenu() {
     if (current && current.dispose) current.dispose();
     current = null;
     canvas.width = 672;
     canvas.height = 768;
     his = GAMES.map(g => loadHi(g.hiKey));
+    if (typeof ArcadeTouch !== 'undefined') ArcadeTouch.configure(MENU_TOUCH);
     fitCanvas();
   }
 
@@ -108,40 +118,69 @@
     sel = i;
     Sfx.playSeq([['C5', 1], ['E5', 1], ['G5', 1], ['C6', 2]], 0.055, { vol: 0.3 });
     current = GAMES[i].make(api);
+    if (typeof ArcadeTouch !== 'undefined') ArcadeTouch.configure(GAMES[i].touch || {});
     fitCanvas();
   }
 
-  window.addEventListener('keydown', (e) => {
-    if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'Space'].includes(e.code)) e.preventDefault();
-    if (e.repeat) return;   // games handle held keys themselves
+  // One key router serves BOTH the physical keyboard and the touch overlay.
+  function pressKey(code, down) {
+    if (!down) {
+      if (current) current.key({ code }, false);
+      return;
+    }
     Sfx.ac();   // first user gesture unlocks audio
-    if (e.code === 'KeyM') {
+    if (code === 'KeyM') {
       const m = Sfx.toggleMute();
       toast = { txt: m ? 'SOUND OFF' : 'SOUND ON', t: 1.4 };
       return;
     }
-    if (e.code === 'Escape') {
+    if (code === 'Escape') {
       if (current) {
         showMenu();
         Sfx.tone({ f: 320, f1: 150, type: 'square', dur: 0.12, vol: 0.2 });
       }
       return;
     }
-    if (current) { current.key(e, true); return; }
-    if (e.code === 'ArrowUp') { sel = (sel + GAMES.length - 1) % GAMES.length; blip(); }
-    else if (e.code === 'ArrowDown') { sel = (sel + 1) % GAMES.length; blip(); }
-    else if (e.code === 'Enter' || e.code === 'Space') startGame(sel);
-    else if (e.code === 'Digit1') startGame(0);
-    else if (e.code === 'Digit2') startGame(1);
-    else if (e.code === 'Digit3') startGame(2);
-    else if (e.code === 'Digit4') startGame(3);
-    else if (e.code === 'Digit5') startGame(4);
-    else if (e.code === 'Digit6') startGame(5);
+    if (current) { current.key({ code }, true); return; }
+    if (code === 'ArrowUp') { sel = (sel + GAMES.length - 1) % GAMES.length; blip(); }
+    else if (code === 'ArrowDown') { sel = (sel + 1) % GAMES.length; blip(); }
+    else if (code === 'Enter' || code === 'Space') startGame(sel);
+    else if (code === 'Digit1') startGame(0);
+    else if (code === 'Digit2') startGame(1);
+    else if (code === 'Digit3') startGame(2);
+    else if (code === 'Digit4') startGame(3);
+    else if (code === 'Digit5') startGame(4);
+    else if (code === 'Digit6') startGame(5);
+  }
+
+  window.addEventListener('keydown', (e) => {
+    if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'Space'].includes(e.code)) e.preventDefault();
+    if (e.repeat) return;   // games handle held keys themselves
+    pressKey(e.code, true);
   });
 
   window.addEventListener('keyup', (e) => {
-    if (current) current.key(e, false);
+    pressKey(e.code, false);
   });
+
+  // tap a menu entry to play it (phones have no Enter key)
+  canvas.addEventListener('pointerdown', (e) => {
+    if (current) return;                       // games handle their own input
+    const r = canvas.getBoundingClientRect();
+    const y = (e.clientY - r.top) * (768 / r.height);
+    const x = (e.clientX - r.left) * (672 / r.width);
+    if (x < 60 || x > 612) return;
+    const i = Math.floor((y - 116) / 56);
+    if (i >= 0 && i < GAMES.length && (y - 116) - i * 56 <= 50) {
+      Sfx.ac();
+      startGame(i);
+    }
+  });
+
+  if (typeof ArcadeTouch !== 'undefined') {
+    ArcadeTouch.init(pressKey);
+    ArcadeTouch.configure({ dpad: 'ud', a: { code: 'Enter', label: 'PLAY' } });
+  }
 
   // auto-pause the running game when the window loses focus
   window.addEventListener('blur', () => {

@@ -1,0 +1,14 @@
+{
+  "name": "80s Arcade",
+  "short_name": "Arcade",
+  "description": "Six 80s games: Space Invaders, Pac-Man, Tetris, 3D Chess, Nebulus and Mr EE",
+  "start_url": ".",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#05050f",
+  "theme_color": "#05050f",
+  "icons": [
+    { "src": "icon-180.png", "sizes": "180x180", "type": "image/png" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+  ]
+}
