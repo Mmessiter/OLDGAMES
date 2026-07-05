@@ -1,5 +1,7 @@
 # '80s Arcade
 
+**▶ Play it in your browser: https://mmessiter.github.io/OLDGAMES/**
+
 Four classics rebuilt from scratch in plain HTML5/JavaScript — no installs, no
 internet needed, everything runs locally in your browser.
 
