@@ -139,6 +139,20 @@ const ArcadeTouch = (() => {
       press = pressFn;
       buildUi();
       document.body.classList.add('touch-device');
+
+      // iOS Safari ignores user-scalable=no: double-taps and pinches still
+      // page-zoom. All game input goes through pointer/touch handlers, so no
+      // default browser gesture is needed anywhere — block them outright.
+      const block = (e) => { if (e.cancelable) e.preventDefault(); };
+      document.addEventListener('gesturestart', block, { passive: false });
+      document.addEventListener('gesturechange', block, { passive: false });
+      document.addEventListener('dblclick', block, { passive: false });
+      let lastTap = 0;
+      document.addEventListener('touchend', (e) => {
+        const now = performance.now();
+        if (now - lastTap < 350 && e.cancelable) e.preventDefault();
+        lastTap = now;
+      }, { passive: false, capture: true });
     },
 
     /* cfg: { dpad:'full'|'lr'|'ud'|null, a:{code,label}, b:{code,label},

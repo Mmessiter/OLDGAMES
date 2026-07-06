@@ -27,6 +27,12 @@ canvas {
   image-rendering: crisp-edges;
   background: #000;
   border-radius: 6px;
+  touch-action: manipulation; /* no double-tap zoom on taps */
+}
+
+body.touch-device #frame,
+body.touch-device canvas {
+  touch-action: none; /* games own every gesture on the screen */
 }
 
 /* CRT scanline overlay */
